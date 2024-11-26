@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.function.BiConsumer;
+import java.util.Arrays;
 
 /**
  * A simple implementation of probed hash tables.
@@ -255,7 +256,9 @@ public class ProbedHashTable<K, V> implements HashTable<K, V> {
       reporter.report("pairs[" + index + "] = " + key + ":" + value);
     } // if reporter != null
     // Note that we've incremented the size.
-    ++this.size;
+    if (reporter != null) {
+      ++this.size;
+    } // if
     // And we're done
     return result;
   } // set(K, V)
@@ -312,7 +315,7 @@ public class ProbedHashTable<K, V> implements HashTable<K, V> {
    */
   @Override
   public void clear() {
-    this.pairs = new Object[41];
+    this.pairs = new Object[5];
     this.size = 0;
   } // clear()
 
@@ -361,17 +364,22 @@ public class ProbedHashTable<K, V> implements HashTable<K, V> {
   /**
    * Expand the size of the table.
    */
+  @SuppressWarnings("unchecked")
   void expand() {
     // Figure out the size of the new table.
     int newSize = 2 * this.pairs.length + rand.nextInt(10);
     if (REPORT_BASIC_CALLS && (reporter != null)) {
       reporter.report("Expanding to " + newSize + " elements.");
     } // if reporter != null
-    // Create a new table of that size.
-    Object[] newPairs = new Object[newSize];
+    Object[] newPairs = Arrays.copyOf(this.pairs, this.pairs.length);
+    this.pairs = new Object[newSize];
     // Move all pairs from the old table to their appropriate
     // location in the new table.
-    // STUB
+    for (int i = 0; i < newPairs.length; i++) {
+      if (newPairs[i] != null) {
+        set(((Pair<K, V>) newPairs[i]).key(), ((Pair<K,V>) newPairs[i]).value());
+      } // if
+    } // for
     // And update our pairs
   } // expand()
 
@@ -384,8 +392,18 @@ public class ProbedHashTable<K, V> implements HashTable<K, V> {
    *
    * @return the aforementioned index.
    */
+  @SuppressWarnings("unchecked")
   int find(K key) {
-    return Math.abs(key.hashCode()) % this.pairs.length;
+    int index = Math.abs(key.hashCode()) % this.pairs.length;
+
+    while ((this.pairs[index]) != null) {
+      if (key.equals(((Pair<K, V>) this.pairs[index]).key())) {
+        return index;
+      } // if
+      index += PROBE_OFFSET;
+      index %= this.pairs.length;
+    } // while
+    return index;
   } // find(K)
 
 } // class ProbedHashTable<K, V>

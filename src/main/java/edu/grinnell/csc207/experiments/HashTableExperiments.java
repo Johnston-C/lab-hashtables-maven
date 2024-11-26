@@ -140,6 +140,7 @@ public class HashTableExperiments {
         } catch (Exception e) {
           pen.println("After setting " + words[i] + ", " + words[j]
               + " is no longer in the table.");
+          pen.println(htab.size());
           htab.dump(pen);
           return;
         } // try/catch
